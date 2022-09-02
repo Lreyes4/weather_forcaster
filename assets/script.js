@@ -1,7 +1,15 @@
-const ApiKey = "fb055ee467948a0ae310d972f9ad2794"
+const ApiKey = "5962ba4bf00030115c5c6bf02a21e266"
 let city;
 let lat;
-let lon;
+let lon; 
+const currentTempEl = document.querySelector(".currentTemp");
+const currentHumidityEl = document.querySelector(".currentHumidity");
+const currentWindEl = document.querySelector(".currentWindSpeed");
+const currentUVIEl = document.querySelector(".currentUVI");
+const currentIconEl = document.querySelector(".currentIcon");
+const currentDayEl = document.querySelector(".currentDay");
+
+
 
 //this is getting the button with the id of button from the html and assigning it to variable named button
 var button = document.getElementById("button")
@@ -12,10 +20,9 @@ button.addEventListener("click", function(){
 //get the lat and long of city before using open weather
 function getLL() {
 city = document.getElementById("input").value;
-fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${key}`)
+fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=imperial&appid=${ApiKey}`)
 .then( function(data){
   //var data = await response.json()
-  console.log(data)
 return data.json()
   //var {longitude, latitude} = data.data[0]
   //  lat = response.coord.lat;
@@ -31,8 +38,30 @@ getApi(lat, lon);
 })
 }
 //this will get the weather forecast:
-async function getApi(lat, lon) {
-  let myObject = await fetch(`https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&appid=${key}&units=imperial`)
-  let weatherData = await myObject.json()
-  console.log(weatherData)
+//api.openweathermap.org/data/2.5/forecast/daily?lat={lat}&lon={lon}&cnt={cnt}&appid={API key}
+function getApi(lat, lon) {
+  fetch(`https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&units=imperial&appid=${ApiKey}`)
+  .then (function(data) {
+  return data.json()
+  
+  })
+  .then (function(data){
+    console.log(data.daily.slice(1,6));
+    console.log(data.current);
+    let currentDt = data.current.dt
+    let currentWind = data.current.wind_speed;
+    let currentTemp = data.current.temp;
+    let currentHumidity = data.current.humidity;
+    let currentIcon = data.current.weather[0].icon;
+    let currentURL = `http://openweathermap.org/img/wn/${currentIcon}@2x.png`
+    let currentUVIndex = data.current.uvi;
+    console.log(currentWind, currentTemp, currentHumidity, currentURL, currentUVIndex)
+    currentHumidityEl.textContent = currentHumidity+" %"
+    currentDayEl.textContent = currentDt
+    currentTempEl.textContent = currentTemp+" F"
+    currentWindEl.textContent = currentWind+" mph"
+    currentUVIEl.textContent = currentUVIndex+" uvi"
+    currentIconEl.setAttribute("src",currentURL)
+  })
+  
 } 
