@@ -11,24 +11,52 @@ const currentDayEl = document.querySelector(".currentDay");
 
 
 const futureTempEls = document.querySelectorAll(".futureTemp");
-const futureArray = 
+const futureHumidityEls = document.querySelectorAll(".futureHumidity");
+const futureWindEls = document.querySelectorAll(".futureWindSpeed");
+const futureUVIEls = document.querySelectorAll(".futureUVI");
+const futureIconEls = document.querySelectorAll(".futureIcon");
+const futureDayEls = document.querySelectorAll(".futureDay");
 
-for (let i = 0; i < futureArray.length; i++) {
-  futureTempEls[i].textContent = futureArray[i].temp;
-  
+// let futureArray = [".futureTemp", ".futureHumidity", "futureWindSpeed", ".futureUVI", ".futureIcon", ".futureDay" ]
+const cityList = document.querySelector(".city-list")
+let cityArray = []
+const searchedCities = JSON.parse(localStorage.getItem("savedCities"))
+if (searchedCities){
+  cityArray = searchedCities
+  for (let i = 0; i < cityArray.length; i++) {
+    const element = cityArray[i];
+    storeCity(element)
+    
+  }
 }
 
+function storeCity(city) {
+  let listEl = document.createElement("li")
+  listEl.textContent = city
+  listEl.addEventListener("click", function(){
+    getLL(city)
+  })
+  cityList.append(listEl)
+}
 
 
 //this is getting the button with the id of button from the html and assigning it to variable named button
 var button = document.getElementById("button")
 
 button.addEventListener("click", function () {
-  getLL()
+  city = document.getElementById("input").value;
+  getLL(city)
 });
 //get the lat and long of city before using open weather
-function getLL() {
-  city = document.getElementById("input").value;
+function getLL(city) {
+  if (!cityArray.includes(city)){
+    storeCity(city)
+    cityArray.push(city)
+    localStorage.setItem("savedCities", JSON.stringify(cityArray))
+
+  }
+  
+
   fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=imperial&appid=${ApiKey}`)
     .then(function (data) {
       //var data = await response.json()
@@ -55,9 +83,10 @@ function getApi(lat, lon) {
 
     })
     .then(function (data) {
-      console.log(data.daily.slice(1, 6));
+      
       console.log(data.current);
       let currentDt = data.current.dt
+      let dateString = moment.unix(currentDt).format("MM/DD/YYYY");
       let currentWind = data.current.wind_speed;
       let currentTemp = data.current.temp;
       let currentHumidity = data.current.humidity;
@@ -65,28 +94,29 @@ function getApi(lat, lon) {
       let currentURL = `http://openweathermap.org/img/wn/${currentIcon}@2x.png`
       let currentUVIndex = data.current.uvi;
       console.log(currentWind, currentTemp, currentHumidity, currentURL, currentUVIndex)
-      currentHumidityEl.textContent = currentHumidity + " %"
-      currentDayEl.textContent = currentDt
-      currentTempEl.textContent = currentTemp + " F"
-      currentWindEl.textContent = currentWind + " mph"
-      currentUVIEl.textContent = currentUVIndex + " uvi"
+      currentHumidityEl.textContent = "Humidity: " + currentHumidity + " %"
+      currentDayEl.textContent = dateString
+      currentTempEl.textContent = "Temp: " + currentTemp + " °F"
+      currentWindEl.textContent = "Wind: " + currentWind + " mph"
+      currentUVIEl.textContent = "UVI: " + currentUVIndex
       currentIconEl.setAttribute("src", currentURL)
 
       //future weather days  
-      let futureDt = data.future.dt
-      let futureWind = data.future.wind_speed;
-      let futureTemp = data.future.temp;
-      let futureHumidity = data.future.humidity;
-      let futureIcon = data.future.weather[0].icon;
-      let futureURL = `http://openweathermap.org/img/wn/${futureIcon}@2x.png`
-      let futureUVIndex = data.future.uvi;
-      console.log(futureWind, futureTemp, futureHumidity, futureURL, futureUVIndex)
-      futureHumidityEl.textContent = futureHumidity + " %"
-      futureDayEl.textContent = futureDt
-      futureTempEl.textContent = futureTemp + " F"
-      futureWindEl.textContent = futureWind + " mph"
-      futureUVIEl.textContent = futureUVIndex + " uvi"
-      futureIconEl.setAttribute("src", futureURL)
+      console.log(data.daily.slice(1, 6));
+      const futureArray = data.daily.slice(1, 6)
+      for (let i = 0; i < futureArray.length; i++) {
+        let futureDt = futureArray[i].dt
+        let dateString = moment.unix(futureDt).format("MM/DD/YYYY");
+        futureTempEls[i].textContent = "Temp: " + futureArray[i].temp.day + " °F";
+        futureHumidityEls[i].textContent = "Humidity: " + futureArray[i].humidity + " %"
+        futureDayEls[i].textContent = dateString
+        futureWindEls[i].textContent = "Wind: " + futureArray[i].wind_speed + " mph"
+        futureUVIEls[i].textContent = "UVI: " + futureArray[i].uvi
+        let futureIcon = futureArray[i].weather[0].icon;
+        let futureURL = `http://openweathermap.org/img/wn/${futureIcon}@2x.png`
+        futureIconEls[i].setAttribute("src", futureURL)
+      }
+      
     })
 
 }
